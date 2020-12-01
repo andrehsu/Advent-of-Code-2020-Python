@@ -11,8 +11,8 @@ def part1(inp: list[int]) -> None:
 
 def part2(inp: list[int]) -> None:
     for i in range(len(inp)):
-        for j in range(i+1, len(inp)):
-            for k in range(j+1, len(inp)):
+        for j in range(i + 1, len(inp)):
+            for k in range(j + 1, len(inp)):
                 if len({i, j, k}) == 3 and inp[i] + inp[j] + inp[k] == 2020:
                     print(inp[i] * inp[j] * inp[k])
                     return
