@@ -1,11 +1,11 @@
-input_ = open('input.txt').read().splitlines()
+INPUT = open('input.txt').read().splitlines()
 
 
-def part1(inp: list[str]) -> None:
+def part1(input_: list[str]) -> None:
     count = 0
-    for row in inp:
-        rang, letter, password = row.split()
-        fr, to = rang.split('-')
+    for row in input_:
+        range_, letter, password = row.split()
+        fr, to = range_.split('-')
         fr = int(fr)
         to = int(to)
         letter = letter[0]
@@ -15,11 +15,11 @@ def part1(inp: list[str]) -> None:
     print(count)
 
 
-def part2(inp: list[str]) -> None:
+def part2(input_: list[str]) -> None:
     count = 0
-    for row in inp:
-        rang, letter, password = row.split()
-        fr, to = rang.split('-')
+    for row in input_:
+        range_, letter, password = row.split()
+        fr, to = range_.split('-')
         fr = int(fr)
         to = int(to)
         letter = letter[0]
@@ -32,5 +32,5 @@ def part2(inp: list[str]) -> None:
 
 
 if __name__ == '__main__':
-    part1(input_)
-    part2(input_)
+    part1(INPUT)
+    part2(INPUT)

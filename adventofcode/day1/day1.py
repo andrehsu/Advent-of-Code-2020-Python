@@ -1,4 +1,4 @@
-input_ = list(map(int, open('input.txt').read().splitlines()))
+INPUT = list(map(int, open('input.txt').read().splitlines()))
 
 
 def part1(inp: list[int]) -> None:
@@ -19,5 +19,5 @@ def part2(inp: list[int]) -> None:
 
 
 if __name__ == '__main__':
-    part1(input_)
-    part2(input_)
+    part1(INPUT)
+    part2(INPUT)
