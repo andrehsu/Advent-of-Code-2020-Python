@@ -9,12 +9,7 @@ def part1(inp: list[str]) -> None:
         fr = int(fr)
         to = int(to)
         letter = letter[0]
-        co = 0
-        for i in password:
-            if i == letter:
-                co += 1
-        
-        if fr <= co <= to:
+        if fr <= password.count(letter) <= to:
             count += 1
     
     print(count)
