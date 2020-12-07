@@ -5,24 +5,18 @@ INPUT = open('input.txt').read().splitlines()
 TEST = open('test.txt').read().splitlines()
 TEST_2 = open('test2.txt').read().splitlines()
 
-pattern = r'\w+_\w+'
-
 
 def parse_input(inp: list[str]) -> dict[str, dict[str, int]]:
     bags = {}
     for line in inp:
-        first, second = line.split(' contain ')
-        owner = '_'.join(first.split()[:2])
-        assert owner not in bags, f'{owner} already in bags'
-        assert re.match(pattern, owner), owner
+        owner, second = re.match(r'(\w+ \w+) bags contain (.+)', line).groups()
         
         children = {}
         if second != 'no other bags.':
             for bag_text in second.split(', '):
                 tokens = bag_text.split()
-                child_name = '_'.join(tokens[1:3])
-                assert re.match(pattern, child_name), child_name
-                
+                child_name = ' '.join(tokens[1:3])
+    
                 children[child_name] = int(tokens[0])
         
         bags[owner] = children
@@ -38,11 +32,11 @@ def part1(inp: list[str]) -> None:
         while q:
             bag = q.popleft()
             children = bags[bag]
-            
-            if 'shiny_gold' in children:
+    
+            if 'shiny gold' in children:
                 count += 1
                 break
-            
+    
             q.extend(children)
     
     print(count)
@@ -51,7 +45,7 @@ def part1(inp: list[str]) -> None:
 def part2(inp: list[str]) -> None:
     bags = parse_input(inp)
     total_count = 0
-    q = deque(['shiny_gold'])
+    q = deque(['shiny gold'])
     while q:
         bag = q.popleft()
         for child, count in bags[bag].items():
