@@ -21,7 +21,7 @@ def part1(inp: list[str]) -> None:
 def part2(inp: list[str]) -> None:
     jolts = parse_input(inp)
     
-    print(distinct_ways(jolts))
+    print(calc_unique_arrangements(jolts))
 
 
 def parse_input(inp: list[str]) -> tuple[int]:
@@ -31,32 +31,18 @@ def parse_input(inp: list[str]) -> tuple[int]:
 
 
 @lru_cache(maxsize=None)
-def distinct_ways(jolts: tuple[int]) -> int:
+def calc_unique_arrangements(jolts: tuple[int]) -> int:
     if len(jolts) == 2:
         return 1
-    total_ways = 0
+    arrangements = 0
     first = jolts[0]
     for i in range(1, len(jolts)):
         jolt = jolts[i]
         if jolt - first > 3:
             break
-        total_ways += distinct_ways(jolts[i:])
+        arrangements += calc_unique_arrangements(jolts[i:])
     
-    return total_ways
-
-
-# def distinct_ways_arrange(jolts: tuple[int]):
-#     if len(jolts) == 2:
-#         yield jolts
-#     first = jolts[0]
-#     for i in range(1, len(jolts)):
-#         jolt = jolts[i]
-#         if jolt - first > 3:
-#             break
-#
-#         for sub_arrange in distinct_ways_arrange(jolts[i:]):
-#             ret = first, *sub_arrange
-#             yield ret
+    return arrangements
 
 
 if __name__ == '__main__':
