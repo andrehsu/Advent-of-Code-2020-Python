@@ -10,6 +10,10 @@ load_dotenv('../.env')
 INPUT = open('input.txt').read().splitlines()
 TEST = open('TEST.txt').read().splitlines()
 
+APP_ID = os.getenv('APP_ID')
+if APP_ID is None:
+    raise EnvironmentError('APP_ID missing')
+
 
 def part1(inp: list[str]) -> None:
     earliest = int(inp[0])
@@ -32,7 +36,7 @@ def part2(inp: list[str]) -> None:
         equations.append(f'(t+{i})mod{bus}=0')
     equations_system = ','.join(equations)
     payload = {
-        'appid': os.getenv('APP_ID'),
+        'appid': APP_ID,
         'output': 'json',
         'input': equations_system
     }
