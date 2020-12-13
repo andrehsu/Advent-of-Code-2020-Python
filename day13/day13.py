@@ -43,9 +43,9 @@ def part2(inp: list[str]) -> None:
     for pod in pods:
         if pod['title'] == 'Integer solution':
             subpod = pod['subpods'][0]
-            result = subpod['img']['title']
-            solution, = re.findall(r't = \d+ n \+ (\d+), n element Z', result)
-            print(solution)
+            solution = subpod['plaintext']
+            answer, = re.findall(r't = \d+ n \+ (\d+), n element Z', solution)
+            print(answer)
             return
 
 
