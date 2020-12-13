@@ -5,7 +5,7 @@ from operator import itemgetter
 import requests
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv('../.env')
 
 INPUT = open('input.txt').read().splitlines()
 TEST = open('TEST.txt').read().splitlines()
