@@ -48,7 +48,7 @@ def part2(inp: list[str]) -> None:
         if pod['title'] == 'Integer solution':
             subpod = pod['subpods'][0]
             solution = subpod['plaintext']
-            answer, = re.findall(r't = \d+ n \+ (\d+), n element Z', solution)
+            answer = re.match(r't = \d+ n \+ (\d+), n element Z', solution).group(1)
             print(answer)
             return
 
