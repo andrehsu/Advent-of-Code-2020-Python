@@ -33,7 +33,7 @@ def part2(inp: list[str]) -> None:
     for i, bus in enumerate(buses):
         if bus == 'x':
             continue
-        equations.append(f'(t+{i})mod{bus}=0')
+        equations.append(f'(t+{i}) mod {bus} = 0')
     equations_system = ','.join(equations)
     payload = {
         'appid': APP_ID,
