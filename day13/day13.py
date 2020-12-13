@@ -18,7 +18,7 @@ def part1(inp: list[str]) -> None:
 
 def part2(inp: list[str]) -> None:
     """
-    Put resulting string into Wolfram Alpha or another systems of equation solver
+    Put resulting string into Wolfram Alpha or another system of equations solver
     :param inp: input for the puzzle
     :return: None
     """
