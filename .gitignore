@@ -212,7 +212,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+day13/.env
 .venv
 env/
 venv/

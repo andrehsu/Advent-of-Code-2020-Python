@@ -1,4 +1,11 @@
+import os
+import re
 from operator import itemgetter
+
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 INPUT = open('input.txt').read().splitlines()
 TEST = open('TEST.txt').read().splitlines()
@@ -17,18 +24,29 @@ def part1(inp: list[str]) -> None:
 
 
 def part2(inp: list[str]) -> None:
-    """
-    Put resulting string into Wolfram Alpha or another system of equations solver
-    :param inp: input for the puzzle
-    :return: None
-    """
     buses = inp[1].split(',')
     equations = []
     for i, bus in enumerate(buses):
         if bus == 'x':
             continue
-        equations.append(f'(t+{i}) mod {bus} = 0')
-    print(','.join(equations))
+        equations.append(f'(t+{i})mod{bus}=0')
+    equations_system = ','.join(equations)
+    payload = {
+        'appid': os.getenv('APP_ID'),
+        'output': 'json',
+        'input': equations_system
+    }
+    base_url = 'http://api.wolframalpha.com/v2/query'
+    res = requests.get(base_url, params=payload)
+    json = res.json()
+    pods = json['queryresult']['pods']
+    for pod in pods:
+        if pod['title'] == 'Integer solution':
+            subpod = pod['subpods'][0]
+            result = subpod['img']['title']
+            solution, = re.findall(r't = \d+ n \+ (\d+), n element Z', result)
+            print(solution)
+            return
 
 
 if __name__ == '__main__':
