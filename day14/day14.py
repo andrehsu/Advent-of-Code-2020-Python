@@ -19,7 +19,6 @@ def part1(inp: list[str]) -> None:
         elif line.startswith('me'):
             pos, value = map(int, re.fullmatch(r'mem\[(\d+)] = (\d+)', line).groups())
             mem[pos] = (or_mask | value) & and_mask
-            pass
         else:
             raise ValueError(line)
     
