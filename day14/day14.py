@@ -30,9 +30,9 @@ def parse_addresses(mask: str, address: str) -> Generator[str, None, None]:
     if not mask:
         yield ''
     else:
-        m = mask[0]
-        a = address[0]
-        for sub_address in parse_addresses(mask[1:], address[1:]):
+        m, *m_rest = mask
+        a, *a_rest = address
+        for sub_address in parse_addresses(m_rest, a_rest):
             if m == '0':
                 yield a + sub_address
             elif m == '1':
