@@ -111,7 +111,7 @@ def tokenize(expr: str) -> list[Token]:
 
 MidType = Union[Node, Token]
 NextOp = Callable[[list[MidType]], int]
-AstParser = Callable[[list[MidType], NextOp], Node]
+AstParser = Callable[[list[MidType]], Node]
 
 
 def indexOf(midTypes: list[MidType], op: Type[Op]) -> int:
@@ -121,31 +121,33 @@ def indexOf(midTypes: list[MidType], op: Type[Op]) -> int:
     raise ValueError('op not in midTypes')
 
 
-def to_node(midType: MidType, ast: AstParser, nextOp: NextOp) -> Node:
-    if isinstance(midType, Node):
-        return midType
-    elif isinstance(midType, Num):
-        return Leaf(midType.value)
-    elif isinstance(midType, Wrapped):
-        return ast(midType.children, nextOp)
-    else:
-        raise ValueError(midType)
-
-
-def ast(tokens: list[MidType], next_op: NextOp) -> Node:
-    while len(tokens) > 1:
-        try:
-            i = next_op(tokens)
-        except ValueError:
-            raise ValueError('Stranded tokens (no more ops)')
-        # noinspection PyTypeChecker
-        op: Op = tokens[i]
-        branch = Branch(to_node(tokens[i - 1], ast, next_op), op, to_node(tokens[i + 1], ast, next_op))
-        tokens[i] = branch
-        del tokens[i + 1]
-        del tokens[i - 1]
+def create_ast_parser(next_op: NextOp) -> AstParser:
+    def ast_parser(tokens: list[MidType]) -> Node:
+        def to_node(midType: MidType) -> Node:
+            if isinstance(midType, Node):
+                return midType
+            elif isinstance(midType, Num):
+                return Leaf(midType.value)
+            elif isinstance(midType, Wrapped):
+                return ast_parser(midType.children)
+            else:
+                raise ValueError(midType)
+        
+        while len(tokens) > 1:
+            try:
+                i = next_op(tokens)
+            except ValueError:
+                raise ValueError('Stranded tokens (no more ops)')
+            # noinspection PyTypeChecker
+            op: Op = tokens[i]
+            branch = Branch(to_node(tokens[i - 1]), op, to_node(tokens[i + 1]))
+            tokens[i] = branch
+            del tokens[i + 1]
+            del tokens[i - 1]
+        
+        return tokens[0]
     
-    return tokens[0]
+    return ast_parser
 
 
 # def evaluate_part1(expr: str) -> int:
@@ -207,12 +209,14 @@ def part1(inp: list[str]) -> None:
             i_mult = indexOf(midTypes, Mult)
         except ValueError:
             i_mult = INVALID
-        
+
         if i_add == i_mult == INVALID:
             raise ValueError()
         return min(i_add, i_mult)
-    
-    print(sum(ast(tokenize(line), next_op).evaluate() for line in inp))
+
+    ast_parser = create_ast_parser(next_op)
+
+    print(sum(ast_parser(tokenize(line)).evaluate() for line in inp))
 
 
 def part2(inp: list[str]) -> None:
@@ -223,7 +227,9 @@ def part2(inp: list[str]) -> None:
             i = indexOf(midTypes, Mult)
         return i
     
-    print(sum(ast(tokenize(line), next_op).evaluate() for line in inp))
+    ast_parser = create_ast_parser(next_op)
+    
+    print(sum(ast_parser(tokenize(line)).evaluate() for line in inp))
 
 
 if __name__ == '__main__':
