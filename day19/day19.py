@@ -5,20 +5,22 @@ INPUT = open('input.txt').read().splitlines()
 TEST = open('test.txt').read().splitlines()
 TEST1 = open('test1.txt').read().splitlines()
 
+Rules = dict[int, 'Pattern']
+
 
 class Pattern(abc.ABC):
     max_depth = 50
     
     @abc.abstractmethod
-    def to_regex(self, rules: dict[int, 'Pattern'], depth: int) -> str:
+    def to_regex(self, rules: Rules, depth: int) -> str:
         pass
 
 
 class Value(Pattern):
     def __init__(self, value: str):
         self.value = value
-
-    def to_regex(self, rules: dict[int, 'Pattern'], depth: int) -> str:
+    
+    def to_regex(self, rules: Rules, depth: int) -> str:
         return self.value
 
 
@@ -26,7 +28,7 @@ class Refs(Pattern):
     def __init__(self, ref_ids: list[int]):
         self.ref_ids = ref_ids
     
-    def to_regex(self, rules: dict[int, 'Pattern'], depth: int) -> str:
+    def to_regex(self, rules: Rules, depth: int) -> str:
         if depth == Pattern.max_depth:
             return 'x'
         sb = []
@@ -44,7 +46,7 @@ class Or(Pattern):
         self.a = a
         self.b = b
     
-    def to_regex(self, rules: dict[int, 'Pattern'], depth: int) -> str:
+    def to_regex(self, rules: Rules, depth: int) -> str:
         if depth == Pattern.max_depth:
             return 'x'
         return f'({self.a.to_regex(rules, depth + 1)}|{self.b.to_regex(rules, depth + 1)})'
