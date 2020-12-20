@@ -1,81 +1,15 @@
+import operator
 import re
-from collections import deque, defaultdict
+from collections import deque
+from functools import reduce
 
 import numpy as np
 
+from lib import Image, Tile
+from utils import get_variations
+
 INPUT = open('input.txt').read().splitlines()
 TEST = open('test.txt').read().splitlines()
-
-Pair = tuple[int, int]
-
-TOP = (-1, 0)
-DOWN = (1, 0)
-LEFT = (0, -1)
-RIGHT = (0, 1)
-directions = (TOP, DOWN, LEFT, RIGHT)
-
-
-class Tile:
-    def __init__(self, id: int, arr: np.ndarray):
-        self.id = id
-        self.arr = arr
-    
-    def variations(self) -> list['Tile']:
-        ret = []
-        for arr in [self.arr, np.flipud(self.arr), np.fliplr(self.arr)]:
-            ret.append(Tile(self.id, arr))
-            ret.append(Tile(self.id, np.rot90(arr)))
-            ret.append(Tile(self.id, np.rot90(np.rot90(arr))))
-            ret.append(Tile(self.id, np.rot90(np.rot90(np.rot90(arr)))))
-        
-        return ret
-    
-    def match(self, other: 'Tile', direction: Pair) -> bool:
-        if direction == TOP:
-            return np.array_equal(self.arr[0, :], other.arr[-1, :])
-        elif direction == DOWN:
-            return np.array_equal(self.arr[-1, :], other.arr[0, :])
-        elif direction == LEFT:
-            return np.array_equal(self.arr[:, 0], other.arr[:, -1])
-        elif direction == RIGHT:
-            return np.array_equal(self.arr[:, -1], other.arr[:, 0])
-        else:
-            raise ValueError(direction)
-    
-    def __hash__(self):
-        return hash(self.id)
-    
-    def __eq__(self, other) -> bool:
-        if not isinstance(other, Tile):
-            return False
-        return self.id == other.id
-    
-    def __str__(self) -> str:
-        sb = []
-        for r in range(10):
-            for c in range(10):
-                c = self.arr[r, c]
-                if c:
-                    c = '#'
-                else:
-                    c = '.'
-                sb.append(c)
-            sb.append('\n')
-        return ''.join(sb)
-    
-    def trim(self) -> None:
-        self.arr = self.arr[1:-1, 1:-1]
-
-
-def get_free_spaces(img: dict[Pair, Tile]) -> list[Pair]:
-    ret = []
-    for pos in img:
-        for direction in directions:
-            new_pos = get_pos(pos, direction)
-            if new_pos not in img:
-                ret.append(new_pos)
-    
-    return ret
 
 
 def parse_tiles(inp: list[str]) -> list[Tile]:
@@ -95,127 +29,75 @@ def parse_tiles(inp: list[str]) -> list[Tile]:
     return tiles
 
 
-def get_pos(pos: Pair, direction: Pair) -> Pair:
-    r, c = pos
-    d_r, d_c = direction
-    return r + d_r, c + d_c
-
-
-def print_img(img: dict[Pair, Tile]):
-    rows = list(map(lambda p: p[0], img.keys()))
-    cols = list(map(lambda p: p[1], img.keys()))
-    
-    min_r = min(rows)
-    max_r = max(rows)
-    min_c = min(cols)
-    max_c = max(cols)
-    output = defaultdict(lambda: '.')
-    for r in range(min_r, max_r + 1):
-        for c in range(min_c, max_c + 1):
-            if (r, c) not in img:
-                continue
-            tile = img[(r, c)]
-            for r_ in range(8):
-                for c_ in range(8):
-                    output[(r * 8 + r_, c * 8 + c_)] = tile.arr[r_, c_]
-    
-    rows, cols = list(zip(*output.keys()))
-    
-    min_r = min(rows)
-    max_r = max(rows)
-    min_c = min(cols)
-    max_c = max(cols)
-    
-    with open('output.txt', 'w+') as file:
-        for r in range(min_r, max_r + 1):
-            for c in range(min_c, max_c + 1):
-                char = output[(r, c)]
-                if char:
-                    char = '#'
+def write_img(combined: np.ndarray, filepath: str):
+    with open(filepath, 'w+') as file:
+        for i in range(len(combined)):
+            for j in range(len(combined[i])):
+                c = combined[i, j]
+                if c:
+                    c = '#'
                 else:
-                    char = '.'
-                file.write(char)
+                    c = '.'
+                file.write(c)
             file.write('\n')
 
 
 def part1(inp: list[str]) -> None:
     tiles = parse_tiles(inp)
+    img = Image()
+    img.fit(tiles)
     
-    def fits(pos: Pair, tile: Tile) -> bool:
-        for direction in directions:
-            new_pos = get_pos(pos, direction)
-            if new_pos not in img:
-                continue
-            if not tile.match(img[new_pos], direction):
-                return False
-        
-        return True
+    edge_ids = map(lambda tile: tile.id, img.get_edge_tiles())
+    print(reduce(operator.mul, edge_ids))
+
+
+def count_monsters(str_img: list[str]) -> int:
+    pattern1 = r'..................#.'
+    pattern2 = r'#....##....##....###'
+    pattern3 = r'.#..#..#..#..#..#...'
+    count = 0
+    for i, line in enumerate(str_img):
+        for match in re.finditer(pattern2, line):
+            start = match.start()
+            if re.match(pattern1, str_img[i - 1][start:]) and re.match(pattern3, str_img[i + 1][start:]):
+                count += 1
     
-    def try_free_space():
-        for tile in tiles:
-            for variation in tile.variations():
-                if fits(free_space, variation):
-                    img[free_space] = variation
-                    tiles.remove(tile)
-                    return True
-        return False
-    
-    img: dict[Pair, Tile] = {(0, 0): tiles.pop()}
-    while tiles:
-        free_spaces = get_free_spaces(img)
-        for free_space in free_spaces:
-            if try_free_space():
-                break
-    rows, cols = list(zip(*img.keys()))
-    
-    min_r = min(rows)
-    max_r = max(rows)
-    min_c = min(cols)
-    max_c = max(cols)
-    total = 1
-    for r in [min_r, max_r]:
-        for c in [min_c, max_c]:
-            total *= img[(r, c)].id
-    print(total)
+    return count
+
+
+def ndarray_to_list(arr: np.ndarray) -> list[str]:
+    l = []
+    for i in range(len(arr)):
+        sb = []
+        for j in range(len(arr[i])):
+            b = arr[i, j]
+            if b:
+                b = '#'
+            else:
+                b = '.'
+            sb.append(b)
+        l.append(''.join(sb))
+    return l
 
 
 def part2(inp: list[str]) -> None:
     tiles = parse_tiles(inp)
+    img = Image()
+    img.fit(tiles)
     
-    def fits(pos: Pair, tile: Tile) -> bool:
-        for direction in directions:
-            new_pos = get_pos(pos, direction)
-            if new_pos not in img:
-                continue
-            if not tile.match(img[new_pos], direction):
-                return False
-        
-        return True
-    
-    def try_free_space():
-        for tile in tiles:
-            for variation in tile.variations():
-                if fits(free_space, variation):
-                    img[free_space] = variation
-                    tiles.remove(tile)
-                    return True
-        return False
-    
-    img: dict[Pair, Tile] = {(0, 0): tiles.pop()}
-    while tiles:
-        free_spaces = get_free_spaces(img)
-        for free_space in free_spaces:
-            if try_free_space():
-                break
-    
-    for k, tile in img.items():
-        tile.trim()
-    
-    print_img(img)
+    combined = img.get_combined()
+    for i, variation in enumerate(get_variations(combined)):
+        write_img(variation, f'solution{i}.txt')
+        str_img = ndarray_to_list(variation)
+        count = count_monsters(str_img)
+        if count > 1:
+            total_count = sum(sum(i == '#' for i in line) for line in str_img)
+            print(total_count - count * 15)
+            return
 
 
 if __name__ == '__main__':
     part1(TEST)
     part2(TEST)
-    # part1(INPUT)
-    # part2(INPUT)
+    part1(INPUT)
+    part2(INPUT)
