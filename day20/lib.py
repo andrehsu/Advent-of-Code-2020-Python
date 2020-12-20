@@ -1,11 +1,19 @@
+import enum
+import re
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, TypeVar, Iterable
 
 import numpy as np
 
-from direction import Direction
-from utils import Pair, get_pos, get_min_max, get_variations
+Pair = tuple[int, int]
+
+
+class Direction(enum.Enum):
+    TOP = (-1, 0)
+    DOWN = (1, 0)
+    LEFT = (0, -1)
+    RIGHT = (0, 1)
 
 
 class Image:
@@ -103,7 +111,7 @@ class Tile:
         
         return ret
     
-    def match(self, other: 'Tile', direction: Direction) -> bool:
+    def match(self, other: 'Tile', direction: 'Direction') -> bool:
         if direction == Direction.TOP:
             return np.array_equal(self.arr[0, :], other.arr[-1, :])
         elif direction == Direction.DOWN:
@@ -139,3 +147,56 @@ class Tile:
     def trimmed(self) -> 'Tile':
         trimmed_arr = self.arr[1:-1, 1:-1]
         return Tile(self.id, trimmed_arr)
+
+
+def get_variations(arr: np.ndarray) -> list[np.ndarray]:
+    ret = []
+    orig = arr.copy()
+    ret.append(arr)
+    ret.append(np.rot90(arr))
+    ret.append(np.rot90(np.rot90(arr)))
+    ret.append(np.rot90(np.rot90(np.rot90(arr))))
+    arr = np.flipud(orig)
+    ret.append(arr)
+    ret.append(np.rot90(arr))
+    ret.append(np.rot90(np.rot90(arr)))
+    ret.append(np.rot90(np.rot90(np.rot90(arr))))
+    arr = np.fliplr(orig)
+    ret.append(arr)
+    ret.append(np.rot90(np.rot90(arr)))
+    
+    return ret
+
+
+def get_pos(pos: Pair, direction: Direction) -> Pair:
+    r, c = pos
+    d_r, d_c = direction.value
+    return r + d_r, c + d_c
+
+
+T = TypeVar('T')
+
+
+def get_min_max(*iterables: Iterable[T]) -> tuple[tuple[T, T], ...]:
+    ret = []
+    for iterable in iterables:
+        l = list(iterable)
+        ret.append((min(l), max(l)))
+    return tuple(ret)
+
+
+def count_monsters(combined: np.ndarray) -> int:
+    pattern1 = r'..................#.'
+    pattern2 = r'#....##....##....###'
+    pattern3 = r'.#..#..#..#..#..#...'
+    
+    lines = list(map(lambda row: ''.join('#' if b else '.' for b in row), combined))
+    
+    count = 0
+    for i, line in enumerate(lines[:-1]):
+        for match in re.finditer(pattern2, line):
+            start = match.start()
+            if re.match(pattern1, lines[i - 1][start:]) and re.match(pattern3, lines[i + 1][start:]):
+                count += 1
+    
+    return count
